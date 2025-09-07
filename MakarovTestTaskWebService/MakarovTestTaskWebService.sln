@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36310.24
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakarovTestTaskWebService", "MakarovTestTaskWebService\MakarovTestTaskWebService.csproj", "{E6F9C606-D340-49CC-864E-9675D684D5E7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MakarovTestTaskWebService.Core", "MakarovTestTaskWebService.Core\MakarovTestTaskWebService.Core.csproj", "{1C0CE56F-694C-4CDC-9556-85E04C872B4F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{E6F9C606-D340-49CC-864E-9675D684D5E7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6F9C606-D340-49CC-864E-9675D684D5E7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6F9C606-D340-49CC-864E-9675D684D5E7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6F9C606-D340-49CC-864E-9675D684D5E7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1C0CE56F-694C-4CDC-9556-85E04C872B4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1C0CE56F-694C-4CDC-9556-85E04C872B4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1C0CE56F-694C-4CDC-9556-85E04C872B4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1C0CE56F-694C-4CDC-9556-85E04C872B4F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {50A9DBD3-1B5C-4519-9588-5C4D37E329D7}
+	EndGlobalSection
+EndGlobal

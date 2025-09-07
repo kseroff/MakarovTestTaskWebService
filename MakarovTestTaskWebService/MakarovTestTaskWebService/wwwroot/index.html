@@ -1,0 +1,491 @@
+﻿<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 30px;
+        }
+
+        .actions {
+            margin-bottom: 18px;
+        }
+
+        button {
+            margin-right: 10px;
+            padding: 8px 14px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        th {
+            background: #f5f5f5;
+            text-align: left;
+        }
+
+        thead tr:first-child th {
+            text-align: center;
+            background: #eee;
+            font-weight: 700;
+        }
+
+        .muted {
+            color: #777;
+            margin-top: 12px;
+        }
+
+        .error {
+            color: #b00020;
+            margin-top: 12px;
+            white-space: pre-wrap;
+        }
+
+        .ok {
+            color: #0a7f28;
+        }
+
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.45);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            width: 520px;
+            max-width: 95%;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+            .modal h3 {
+                margin: 0 0 10px 0;
+            }
+
+            .modal .row {
+                display: grid;
+                grid-template-columns: 28px 1fr;
+                gap: 10px;
+                align-items: center;
+                margin-top: 10px;
+            }
+
+            .modal label {
+                font-size: 14px;
+            }
+
+            .modal input[type="text"], .modal input[type="number"] {
+                width: 100%;
+                padding: 6px;
+            }
+
+            .modal .footer {
+                display: flex;
+                gap: 10px;
+                justify-content: flex-end;
+                margin-top: 16px;
+            }
+    </style>
+</head>
+<body>
+    <h1>Добро пожаловать!</h1>
+
+    <div class="actions">
+        <button id="btnOpenAddEmployee">Добавить сотрудника</button>
+        <button id="btnOpenAddDepartment">Добавить отдел</button>
+        <button onclick="location.href='/swagger'">Открыть Swagger</button>
+    </div>
+
+    <div id="addEmployeeModal" class="modal-backdrop">
+        <div class="modal">
+            <h3>Добавить сотрудника</h3>
+            <form id="addEmployeeForm">
+                <label>Имя: <input type="text" id="addName" required></label>
+                <label>Фамилия: <input type="text" id="addSurname" required></label>
+                <label>Телефон: <input type="text" id="addPhone" required></label>
+                <label>ID компании: <input type="number" id="addCompanyId" required></label>
+                <label>ID отдела: <input type="number" id="addDepartmentId" required></label>
+                <label>Тип паспорта: <input type="text" id="addPassportType" required></label>
+                <label>Номер паспорта: <input type="text" id="addPassportNumber" required></label>
+                <div class="footer">
+                    <button type="submit">Сохранить</button>
+                    <button type="button" onclick="closeModal('addEmployeeModal')">Отмена</button>
+                </div>
+            </form>
+            <div id="addEmployeeStatus" class="muted"></div>
+        </div>
+    </div>
+
+    <div id="addDepartmentModal" class="modal-backdrop">
+        <div class="modal">
+            <h3>Добавить отдел</h3>
+            <form id="addDepartmentForm">
+                <label>Название отдела: <input type="text" id="addDeptName" required></label>
+                <label>Телефон отдела: <input type="text" id="addDeptPhone" required></label>
+                <div class="footer">
+                    <button type="submit">Сохранить</button>
+                    <button type="button" onclick="closeModal('addDepartmentModal')">Отмена</button>
+                </div>
+            </form>
+            <div id="addDepartmentStatus" class="muted"></div>
+        </div>
+    </div>
+
+    <h2>Сотрудники</h2>
+    <div id="status" class="muted">Загружаю список…</div>
+
+    <div style="overflow:auto;">
+        <table id="employeesTable" style="display:none;">
+            <thead>
+                <tr>
+                    <th colspan="5">Employee</th>
+                    <th colspan="3">Department</th>
+                    <th colspan="2">Passport</th>
+                    <th colspan="2">Действия</th>
+                </tr>
+                <tr>
+                    <th>Id</th>
+                    <th>Name</th>
+                    <th>Surname</th>
+                    <th>Phone</th>
+                    <th>CompanyId</th>
+
+                    <th>Dept.Id</th>
+                    <th>Dept.Name</th>
+                    <th>Dept.Phone</th>
+
+                    <th>Number</th>
+                    <th>Type</th>
+
+                    <th>Ред.</th>
+                    <th>Удал.</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="editModal" class="modal-backdrop" role="dialog" aria-modal="true" aria-hidden="true">
+        <div class="modal">
+            <h3>Редактирование сотрудника <span id="editTitleId"></span></h3>
+
+            <div class="row">
+                <input type="checkbox" id="chkName">
+                <label for="name">Name</label>
+            </div>
+            <input type="text" id="name">
+
+            <div class="row">
+                <input type="checkbox" id="chkSurname">
+                <label for="surname">Surname</label>
+            </div>
+            <input type="text" id="surname">
+
+            <div class="row">
+                <input type="checkbox" id="chkPhone">
+                <label for="phone">Phone</label>
+            </div>
+            <input type="text" id="phone">
+
+            <div class="row">
+                <input type="checkbox" id="chkCompanyId">
+                <label for="companyId">CompanyId</label>
+            </div>
+            <input type="number" id="companyId" min="1">
+
+            <div class="row">
+                <input type="checkbox" id="chkDepartmentId">
+                <label for="departmentId">DepartmentId</label>
+            </div>
+            <input type="number" id="departmentId" min="1">
+
+            <div class="row">
+                <input type="checkbox" id="chkPassportNumber">
+                <label for="passportNumber">Passport Number</label>
+            </div>
+            <input type="text" id="passportNumber">
+
+            <div class="row">
+                <input type="checkbox" id="chkPassportType">
+                <label for="passportType">Passport Type</label>
+            </div>
+            <input type="text" id="passportType">
+
+            <div class="footer">
+                <button id="btnSave">Сохранить</button>
+                <button id="btnCancel">Отмена</button>
+            </div>
+            <div id="editStatus" class="muted"></div>
+        </div>
+    </div>
+
+    <script>
+        console.log('123');
+        const apiBase = '/api/employee';
+        let employeesCache = [];
+        let editingId = null;
+
+        document.getElementById('btnOpenAddEmployee').onclick = () => openModal('addEmployeeModal');
+        document.getElementById('btnOpenAddDepartment').onclick = () => openModal('addDepartmentModal');
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        document.getElementById('addEmployeeForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('addName').value,
+                surname: document.getElementById('addSurname').value,
+                phone: document.getElementById('addPhone').value,
+                companyId: parseInt(document.getElementById('addCompanyId').value),
+                departmentId: parseInt(document.getElementById('addDepartmentId').value),
+                passportType: document.getElementById('addPassportType').value,
+                passportNumber: document.getElementById('addPassportNumber').value
+            };
+            const res = await fetch('/api/employee', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const statusDiv = document.getElementById('addEmployeeStatus');
+            if (res.ok) {
+                statusDiv.textContent = 'Сотрудник успешно добавлен';
+                statusDiv.className = 'ok';
+                setTimeout(() => { closeModal('addEmployeeModal'); loadEmployees(); }, 1000);
+            } else {
+                const err = await res.text();
+                statusDiv.textContent = 'Ошибка: ' + err;
+                statusDiv.className = 'error';
+            }
+        });
+
+        document.getElementById('addDepartmentForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('addDeptName').value,
+                phone: document.getElementById('addDeptPhone').value
+            };
+            const res = await fetch('/api/department', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const statusDiv = document.getElementById('addDepartmentStatus');
+            if (res.ok) {
+                statusDiv.textContent = 'Отдел успешно добавлен';
+                statusDiv.className = 'ok';
+                setTimeout(() => closeModal('addDepartmentModal'), 1000);
+            } else {
+                const err = await res.text();
+                statusDiv.textContent = 'Ошибка: ' + err;
+                statusDiv.className = 'error';
+            }
+        });
+
+        async function loadEmployees() {
+            const status = document.getElementById('status');
+            const table = document.getElementById('employeesTable');
+            const tbody = table.querySelector('tbody');
+
+            try {
+                const res = await fetch(apiBase + "/all", { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) {
+                    const txt = await res.text();
+                    status.textContent = 'Ошибка загрузки (' + res.status + '): ' + txt;
+                    status.className = 'error';
+                    return;
+                }
+                const data = await res.json();
+                employeesCache = Array.isArray(data) ? data : [];
+
+                if (employeesCache.length === 0) {
+                    status.textContent = 'Сотрудников пока нет.';
+                    status.className = 'muted';
+                    table.style.display = 'none';
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                for (const e of employeesCache) {
+                    const tr = document.createElement('tr');
+
+                    const dept = e.department || {};
+                    const pass = e.passport || {};
+
+                    tr.innerHTML = `
+                    <td>${e.id ?? ''}</td>
+                    <td>${e.name ?? ''}</td>
+                    <td>${e.surname ?? ''}</td>
+                    <td>${e.phone ?? ''}</td>
+                    <td>${e.companyId ?? ''}</td>
+
+                    <td>${dept.id ?? ''}</td>
+                    <td>${dept.name ?? ''}</td>
+                    <td>${dept.phone ?? ''}</td>
+
+                    <td>${pass.number ?? ''}</td>
+                    <td>${pass.type ?? ''}</td>
+
+                    <td><button data-id="${e.id}" class="btn-edit">Ред.</button></td>
+                    <td><button data-id="${e.id}" class="btn-del">Удал.</button></td>
+                  `;
+                    tbody.appendChild(tr);
+                }
+
+                tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', onEditClick));
+                tbody.querySelectorAll('.btn-del').forEach(b => b.addEventListener('click', onDeleteClick));
+
+                status.textContent = 'Найдено записей: ' + employeesCache.length;
+                status.className = 'ok';
+                table.style.display = '';
+            } catch (err) {
+                status.textContent = 'Ошибка: ' + (err?.message || err);
+                status.className = 'error';
+            }
+        }
+
+        async function onDeleteClick(ev) {
+            const id = Number(ev.currentTarget.getAttribute('data-id'));
+            if (!id)
+                return;
+
+            if (!confirm(`Удалить сотрудника #${id}?`))
+                return;
+
+            const res = await fetch(`${apiBase}/${id}`, { method: 'DELETE' });
+            if (res.status === 204) {
+                await loadEmployees();
+            } else {
+                const text = await res.text();
+                alert('Ошибка удаления (' + res.status + '): ' + text);
+            }
+        }
+
+        async function onEditClick(ev) {
+            const id = Number(ev.currentTarget.getAttribute('data-id'));
+            if (!id)
+                return;
+
+            let employee = employeesCache.find(x => x.id === id);
+
+            const r = await fetch(`${apiBase}/${id}`, { headers: { 'Accept': 'application/json' } });
+            if (r.ok)
+                employee = await r.json();
+
+            openEditModal(employee);
+        }
+
+        function openEditModal(e) {
+            editingId = e.id;
+            document.getElementById('editTitleId').textContent = `#${e.id}`;
+
+            document.getElementById('name').value = e.name ?? '';
+            document.getElementById('surname').value = e.surname ?? '';
+            document.getElementById('phone').value = e.phone ?? '';
+            document.getElementById('companyId').value = e.companyId ?? '';
+            document.getElementById('departmentId').value = (e.department?.id) ?? '';
+            document.getElementById('passportNumber').value = (e.passport?.number) ?? '';
+            document.getElementById('passportType').value = (e.passport?.type) ?? '';
+
+            ['chkName', 'chkSurname', 'chkPhone', 'chkCompanyId', 'chkDepartmentId', 'chkPassportNumber', 'chkPassportType']
+                .forEach(id => document.getElementById(id).checked = false);
+
+            document.getElementById('editStatus').textContent = '';
+            document.getElementById('editStatus').className = 'muted';
+
+            const m = document.getElementById('editModal');
+            m.style.display = 'flex';
+
+            document.getElementById('btnSave').onclick = submitEdit;
+            document.getElementById('btnCancel').onclick = closeEditModal;
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+            editingId = null;
+        }
+
+        async function submitEdit() {
+            if (!editingId)
+                return;
+
+            const pick = id => document.getElementById(id).checked;
+
+            const draft = {
+                name: document.getElementById('name').value.trim(),
+                surname: document.getElementById('surname').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                companyId: Number(document.getElementById('companyId').value),
+                departmentId: Number(document.getElementById('departmentId').value),
+                passportType: document.getElementById('passportType').value.trim(),
+                passportNumber: document.getElementById('passportNumber').value.trim()
+            };
+
+            const payload = {};
+            if (pick('chkName')) payload.name = draft.name;
+            if (pick('chkSurname')) payload.surname = draft.surname;
+            if (pick('chkPhone')) payload.phone = draft.phone;
+            if (pick('chkCompanyId') && Number.isFinite(draft.companyId)) payload.companyId = draft.companyId;
+            if (pick('chkDepartmentId') && Number.isFinite(draft.departmentId)) payload.departmentId = draft.departmentId;
+            if (pick('chkPassportType')) payload.passportType = draft.passportType;
+            if (pick('chkPassportNumber')) payload.passportNumber = draft.passportNumber;
+
+            if (Object.keys(payload).length === 0) {
+                const st = document.getElementById('editStatus');
+                st.textContent = 'Выберите поля (галочками), которые нужно изменить.';
+                st.className = 'error';
+                return;
+            }
+
+            try {
+                const url = `${apiBase}/${editingId}`;
+                const body = JSON.stringify(payload);
+
+                console.log('PUT', url, body);
+
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body
+                });
+
+                if (res.status === 204 || res.ok) {
+                    closeEditModal();
+                    await loadEmployees();
+                    return;
+                }
+
+                let errorText = '';
+                try { errorText = await res.text(); } catch { }
+                const st = document.getElementById('editStatus');
+                st.textContent = `Ошибка сохранения (${res.status}): ${errorText || 'нет подробностей'}`;
+                st.className = 'error';
+            } catch (err) {
+                const st = document.getElementById('editStatus');
+                st.textContent = 'Сбой сети/скрипта: ' + (err?.message || err);
+                st.className = 'error';
+            }
+        }
+
+        loadEmployees();
+    </script>
+</body>
+</html>
