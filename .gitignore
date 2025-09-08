@@ -1,0 +1,15 @@
+﻿################################################################################
+# Данный GITIGNORE-файл был автоматически создан Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs/source/v17
+/MakarovTestTaskWebService/.vs/MakarovTestTaskWebService
+/MakarovTestTaskWebService/MakarovTestTaskWebService/bin/Debug/net8.0
+/MakarovTestTaskWebService/MakarovTestTaskWebService/obj/Debug/net8.0
+/MakarovTestTaskWebService/MakarovTestTaskWebService/obj/MakarovTestTaskWebService.csproj.nuget.dgspec.json
+/MakarovTestTaskWebService/MakarovTestTaskWebService/obj/MakarovTestTaskWebService.csproj.nuget.g.props
+/MakarovTestTaskWebService/MakarovTestTaskWebService/obj/MakarovTestTaskWebService.csproj.nuget.g.targets
+/MakarovTestTaskWebService/MakarovTestTaskWebService/obj/project.assets.json
+/MakarovTestTaskWebService/MakarovTestTaskWebService/obj/project.nuget.cache
+/MakarovTestTaskWebService/MakarovTestTaskWebService.Core/bin/Debug/net8.0
+/MakarovTestTaskWebService/MakarovTestTaskWebService.Core/obj
