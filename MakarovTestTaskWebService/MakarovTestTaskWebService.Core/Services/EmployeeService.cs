@@ -29,12 +29,24 @@ namespace MakarovTestTaskWebService.Core.Services
             await using var tran = await (_dbConnection as Npgsql.NpgsqlConnection)!.BeginTransactionAsync();
             try
             {
-                var passport = new Passport { Type = model.PassportType, Number = model.PassportNumber };
-                await CreatePassportAsync(passport, tran);
+                bool hasPassNum = !string.IsNullOrWhiteSpace(model.PassportNumber);
+                bool hasPassType = !string.IsNullOrWhiteSpace(model.PassportType);
+                if (hasPassNum ^ hasPassType)
+                    throw new InvalidOperationException("Для паспорта нужно указать и Number, и Type, либо ничего.");
 
-                var department = await GetDepartmentByIdAsync(model.DepartmentId, tran);
-                if (department is null)
-                    throw new InvalidOperationException($"Отдел с Id={model.DepartmentId} не найден.");
+                Department? department = null;
+                if (model.DepartmentId.HasValue && model.DepartmentId.Value > 0)
+                    department = await GetDepartmentByIdAsync(model.DepartmentId, tran);
+
+                Passport? passport = null;
+                if (hasPassNum && hasPassType)
+                {
+                    passport = new Passport { 
+                        Number = model.PassportNumber!, 
+                        Type = model.PassportType! 
+                    };
+                    await CreatePassportAsync(passport, tran);
+                }
 
                 var employee = new Employee
                 {
@@ -67,7 +79,7 @@ namespace MakarovTestTaskWebService.Core.Services
             await using var tran = await (_dbConnection as Npgsql.NpgsqlConnection)!.BeginTransactionAsync();
             try
             {
-                // 1) Текущие данные
+                // Текущие данные
                 var current = await GetEmployeeByIdAsync(id, tran);
                 if (current is null)
                 {
@@ -206,8 +218,11 @@ namespace MakarovTestTaskWebService.Core.Services
             return affected > 0;
         }
 
-        private async Task<Department?> GetDepartmentByIdAsync(int departmentId, IDbTransaction? tran = null)
+        private async Task<Department?> GetDepartmentByIdAsync(int? departmentId, IDbTransaction? tran = null)
         {
+            if (!departmentId.HasValue || departmentId.Value <= 0)
+                return null;
+
             const string sql = "SELECT Id, Name, Phone FROM Department WHERE Id = @Id";
             return await _dbConnection.QueryFirstOrDefaultAsync<Department>(sql, new { Id = departmentId }, transaction: tran);
         }
