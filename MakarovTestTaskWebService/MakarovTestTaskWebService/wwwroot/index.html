@@ -152,6 +152,22 @@
     <h2>Сотрудники</h2>
     <div id="status" class="muted">Загружаю список…</div>
 
+    <div class="filters" style="margin: 10px 0 18px 0; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <label>
+            Company ID:
+            <input type="number" id="fltCompanyId" min="1" style="width:120px; padding:6px;">
+        </label>
+        <button id="btnFilterCompany">Показать по компании</button>
+
+        <label>
+            Department ID:
+            <input type="number" id="fltDepartmentId" min="1" style="width:120px; padding:6px;">
+        </label>
+        <button id="btnFilterDepartment">Показать по отделу</button>
+
+        <button id="btnReset">Сбросить фильтры</button>
+    </div>
+
     <div style="overflow:auto;">
         <table id="employeesTable" style="display:none;">
             <thead>
@@ -300,64 +316,69 @@
             }
         });
 
-        async function loadEmployees() {
+        function renderEmployees(list, labelForStatus = null) {
             const status = document.getElementById('status');
             const table = document.getElementById('employeesTable');
             const tbody = table.querySelector('tbody');
 
+            if (!Array.isArray(list) || list.length === 0) {
+                status.textContent = (labelForStatus ?? 'Сотрудников пока нет.');
+                status.className = 'muted';
+                table.style.display = 'none';
+                tbody.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            for (const e of list) {
+                const tr = document.createElement('tr');
+                const dept = e.department || {};
+                const pass = e.passport || {};
+                tr.innerHTML = `
+        <td>${e.id ?? ''}</td>
+        <td>${e.name ?? ''}</td>
+        <td>${e.surname ?? ''}</td>
+        <td>${e.phone ?? ''}</td>
+        <td>${e.companyId ?? ''}</td>
+
+        <td>${dept.id ?? ''}</td>
+        <td>${dept.name ?? ''}</td>
+        <td>${dept.phone ?? ''}</td>
+
+        <td>${pass.number ?? ''}</td>
+        <td>${pass.type ?? ''}</td>
+
+        <td><button data-id="${e.id}" class="btn-edit">Ред.</button></td>
+        <td><button data-id="${e.id}" class="btn-del">Удал.</button></td>
+      `;
+                tbody.appendChild(tr);
+            }
+
+            tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', onEditClick));
+            tbody.querySelectorAll('.btn-del').forEach(b => b.addEventListener('click', onDeleteClick));
+
+            status.textContent = `${labelForStatus ?? 'Найдено записей'}: ${list.length}`;
+            status.className = 'ok';
+            table.style.display = '';
+        }
+
+        async function loadEmployees() {
+            const status = document.getElementById('status');
+            status.textContent = 'Загружаю список…';
+            status.className = 'muted';
+
             try {
-                const res = await fetch(apiBase + "/all", { headers: { 'Accept': 'application/json' } });
+                const res = await fetch(`${apiBase}/all`, { headers: { 'Accept': 'application/json' } });
                 if (!res.ok) {
-                    const txt = await res.text();
-                    status.textContent = 'Ошибка загрузки (' + res.status + '): ' + txt;
+                    status.textContent = 'Ошибка загрузки (' + res.status + ')';
                     status.className = 'error';
                     return;
                 }
                 const data = await res.json();
                 employeesCache = Array.isArray(data) ? data : [];
-
-                if (employeesCache.length === 0) {
-                    status.textContent = 'Сотрудников пока нет.';
-                    status.className = 'muted';
-                    table.style.display = 'none';
-                    return;
-                }
-
-                tbody.innerHTML = '';
-                for (const e of employeesCache) {
-                    const tr = document.createElement('tr');
-
-                    const dept = e.department || {};
-                    const pass = e.passport || {};
-
-                    tr.innerHTML = `
-                    <td>${e.id ?? ''}</td>
-                    <td>${e.name ?? ''}</td>
-                    <td>${e.surname ?? ''}</td>
-                    <td>${e.phone ?? ''}</td>
-                    <td>${e.companyId ?? ''}</td>
-
-                    <td>${dept.id ?? ''}</td>
-                    <td>${dept.name ?? ''}</td>
-                    <td>${dept.phone ?? ''}</td>
-
-                    <td>${pass.number ?? ''}</td>
-                    <td>${pass.type ?? ''}</td>
-
-                    <td><button data-id="${e.id}" class="btn-edit">Ред.</button></td>
-                    <td><button data-id="${e.id}" class="btn-del">Удал.</button></td>
-                  `;
-                    tbody.appendChild(tr);
-                }
-
-                tbody.querySelectorAll('.btn-edit').forEach(b => b.addEventListener('click', onEditClick));
-                tbody.querySelectorAll('.btn-del').forEach(b => b.addEventListener('click', onDeleteClick));
-
-                status.textContent = 'Найдено записей: ' + employeesCache.length;
-                status.className = 'ok';
-                table.style.display = '';
+                renderEmployees(employeesCache);
             } catch (err) {
-                status.textContent = 'Ошибка: ' + (err?.message || err);
+                status.textContent = 'Сбой загрузки: ' + (err?.message || err);
                 status.className = 'error';
             }
         }
@@ -484,6 +505,58 @@
                 st.className = 'error';
             }
         }
+
+        async function loadByCompany() {
+            const status = document.getElementById('status');
+            const id = Number(document.getElementById('fltCompanyId').value);
+            if (!Number.isFinite(id) || id <= 0) {
+                alert('Введите корректный Company ID (> 0)');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/employee/company/${id}`, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) {
+                    status.textContent = 'Ошибка (' + res.status + ') при загрузке по компании';
+                    status.className = 'error';
+                    return;
+                }
+                const data = await res.json();
+                renderEmployees(Array.isArray(data) ? data : [], `Компания #${id}`);
+            } catch (err) {
+                status.textContent = 'Сбой: ' + (err?.message || err);
+                status.className = 'error';
+            }
+        }
+
+        async function loadByDepartment() {
+            const status = document.getElementById('status');
+            const id = Number(document.getElementById('fltDepartmentId').value);
+            if (!Number.isFinite(id) || id <= 0) {
+                alert('Введите корректный Department ID (> 0)');
+                return;
+            }
+            try {
+                const res = await fetch(`/api/department/department/${id}`, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) {
+                    status.textContent = 'Ошибка (' + res.status + ') при загрузке по отделу';
+                    status.className = 'error';
+                    return;
+                }
+                const data = await res.json();
+                renderEmployees(Array.isArray(data) ? data : [], `Отдел #${id}`);
+            } catch (err) {
+                status.textContent = 'Сбой: ' + (err?.message || err);
+                status.className = 'error';
+            }
+        }
+
+        document.getElementById('btnFilterCompany').addEventListener('click', loadByCompany);
+        document.getElementById('btnFilterDepartment').addEventListener('click', loadByDepartment);
+        document.getElementById('btnReset').addEventListener('click', () => {
+            document.getElementById('fltCompanyId').value = '';
+            document.getElementById('fltDepartmentId').value = '';
+            loadEmployees();
+        });
 
         loadEmployees();
     </script>
